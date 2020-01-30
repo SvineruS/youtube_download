@@ -5,7 +5,7 @@ import requests
 
 def main():
     watch_url = input("url: ")
-    id_ = get_id_from_watch_url(watch_url)
+    id_ = get_id_from_watch_url(watch_url).strip()
     download_urls = get_download_urls_by_id(id_)
 
     while True:
@@ -17,7 +17,7 @@ def main():
         except (TypeError, KeyError):
             continue
         else:
-            print(url)
+            print("take it: ", url)
             break
 
 
@@ -34,6 +34,9 @@ def get_download_urls_by_id(id_):
     resp = parse.unquote(resp)
     resp = resp.split("player_response=")[1].split("&")[0]
     resp = json.loads(resp)
+    if resp['playabilityStatus']['status'] == 'UNPLAYABLE':
+        raise Exception(resp['playabilityStatus']['reason'])
+
     resp = resp['streamingData']['formats']
     resp = sorted(resp, key=lambda i: i['width'] * i['height'], reverse=True)
     resp = {f"{i['width']}x{i['height']}": i['url'] for i in resp}
