@@ -4,4 +4,4 @@ gives you a direct link to video
 
 Example:
 
-[![example](https://i.imgur.com/ebyrctf.png "example")](https://i.imgur.com/ebyrctf.png "example")
+[![example](https://i.imgur.com/DIFThVu.png "example")](https://i.imgur.com/DIFThVu.png "example")

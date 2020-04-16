@@ -3,22 +3,18 @@ from urllib import parse
 import requests
 
 
-def main():
+def cli():
     watch_url = input("url: ")
     id_ = get_id_from_watch_url(watch_url).strip()
     download_urls = get_download_urls_by_id(id_)
 
-    while True:
-        print("Choose quality:")
-        print(*(f"#{i}: {q}" for i, q in enumerate(download_urls)), sep='\n')
-
-        try:
-            url = list(download_urls.values())[int(input("#"))]
-        except (TypeError, KeyError):
-            continue
-        else:
-            print("take it: ", url)
-            break
+    for i, q in enumerate(download_urls):
+        print(f"#{i}", end=' ')
+        if q['has_video']:
+            print(f"[video {q['video']['width']}*{q['video']['height']}]", end=' ')
+        if q['has_audio']:
+            print("[audio]", end=' ')
+        print(q['url'])
 
 
 def get_id_from_watch_url(url):
@@ -38,13 +34,42 @@ def get_download_urls_by_id(id_):
         raise Exception(player_response_json['playabilityStatus']['reason'])
 
     streaming_data = player_response_json['streamingData']
-    # look at streaming_data['adaptiveFormats']. it contains more formats, for example mp3
 
-    formats = streaming_data['formats']
-    formats_sorted_by_quality = sorted(formats, key=lambda i: i['width'] * i['height'], reverse=True)
-    formats_dict_by_quality = {f"{i['width']}x{i['height']}": i['url'] for i in formats_sorted_by_quality}
-    return formats_dict_by_quality
+    return list(filter(None, map(
+        get_item,
+        streaming_data['formats'] + streaming_data['adaptiveFormats']
+    )))
+
+
+def get_item(format):
+    if 'url' not in format:
+        return None
+
+    has_video = 'width' in format
+    has_audio = 'audioQuality' in format
+
+    video, audio = {}, {}
+    if has_video:
+        video = {
+            'width': format['width'],
+            'height': format['height'],
+        }
+    if has_audio:
+        audio = {
+            'sample_rate': format['audioSampleRate'],
+            'channels': format['audioChannels']
+        }
+
+    item = {
+        'url': format['url'],
+        'has_video': has_video,
+        'video': video,
+        'has_audio': has_audio,
+        'audio': audio,
+        'bitrate': format['bitrate'],
+    }
+    return item
 
 
 if __name__ == "__main__":
-    main()
+    cli()
