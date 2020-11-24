@@ -34,11 +34,23 @@ def get_download_urls_by_id(id_):
         raise Exception(player_response_json['playabilityStatus']['reason'])
 
     streaming_data = player_response_json['streamingData']
+    video_details = player_response_json['videoDetails']
 
-    return list(filter(None, map(
+    formats = list(filter(None, map(
         get_item,
         streaming_data['formats'] + streaming_data['adaptiveFormats']
     )))
+    thumbnails = [t['url'] for t in video_details['thumbnail']['thumbnails']]
+
+    data = {
+        'title':  video_details['title'],
+        'length': video_details['lengthSeconds'],
+        'description': video_details['shortDescription'],
+        'formats': formats,
+        'thumbnails': thumbnails
+    }
+
+    return data
 
 
 def get_item(format):
