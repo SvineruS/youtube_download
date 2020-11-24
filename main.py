@@ -6,9 +6,9 @@ import requests
 def cli():
     watch_url = input("url: ")
     id_ = get_id_from_watch_url(watch_url).strip()
-    download_urls = get_download_urls_by_id(id_)
+    video = get_video_by_id(id_)
 
-    for i, q in enumerate(download_urls):
+    for i, q in enumerate(video['formats']):
         print(f"#{i}", end=' ')
         if q['has_video']:
             print(f"[video {q['video']['width']}*{q['video']['height']}]", end=' ')
@@ -25,7 +25,7 @@ def get_id_from_watch_url(url):
     raise Exception('Wrong url')
 
 
-def get_download_urls_by_id(id_):
+def get_video_by_id(id_):
     resp = requests.get(f"https://www.youtube.com/get_video_info?video_id={id_}")
     video_info = parse.unquote(resp.text)
     player_response_string = video_info.split("player_response=")[1].split("&")[0]
@@ -53,32 +53,32 @@ def get_download_urls_by_id(id_):
     return data
 
 
-def get_item(format):
-    if 'url' not in format:
+def get_item(format_):
+    if 'url' not in format_:
         return None
 
-    has_video = 'width' in format
-    has_audio = 'audioQuality' in format
+    has_video = 'width' in format_
+    has_audio = 'audioQuality' in format_
 
     video, audio = {}, {}
     if has_video:
         video = {
-            'width': format['width'],
-            'height': format['height'],
+            'width': format_['width'],
+            'height': format_['height'],
         }
     if has_audio:
         audio = {
-            'sample_rate': format['audioSampleRate'],
-            'channels': format['audioChannels']
+            'sample_rate': format_['audioSampleRate'],
+            'channels': format_['audioChannels']
         }
 
     item = {
-        'url': format['url'],
+        'url': format_['url'],
         'has_video': has_video,
         'video': video,
         'has_audio': has_audio,
         'audio': audio,
-        'bitrate': format['bitrate'],
+        'bitrate': format_['bitrate'],
     }
     return item
 
